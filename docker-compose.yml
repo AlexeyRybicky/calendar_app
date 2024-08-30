@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  app:
+    command: >
+      bash -c "poetry run python manage.py makemigrations && 
+               poetry run python manage.py migrate && 
+               poetry run python manage.py runserver 0.0.0.0:8000"
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_HOST
+      - POSTGRES_PORT
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/usr/src/app
+
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - '5432:5432'
