@@ -6,7 +6,31 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from datetime import datetime, timedelta
 
-from simple_calendar.models import Event, RecurringEvent
+from simple_calendar.models import Event, Recurrence
+
+
+# @api_view(['POST'])
+# def add_event(request):
+#     """
+#     Добавляет событие
+#     """
+#
+#     data = request.data
+#     event = Event(
+#         name=data['name'],
+#         start_time=datetime.strptime(data['start_time'], '%Y-%m-%dT%H:%M:%S'),
+#         recurrence=data.get('recurrence')
+#     )
+#     event.save()
+#
+#     # Если указана периодичность, то создаем последовательность событий на год вперед
+#     if event.recurrence:
+#         recurrence_date = event.start_time.date()
+#         while recurrence_date <= datetime.now().date() + timedelta(days=365):
+#             RecurringEvent(event=event, recurrence_date=recurrence_date).save()
+#             recurrence_date += timedelta(days=event.recurrence)
+#
+#     return Response({'id': event.id}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
@@ -16,19 +40,18 @@ def add_event(request):
     """
 
     data = request.data
-    event = Event(
+    event = Event.objects.create(
         name=data['name'],
         start_time=datetime.strptime(data['start_time'], '%Y-%m-%dT%H:%M:%S'),
-        recurrence=data.get('recurrence')
     )
-    event.save()
 
-    # Если указана периодичность, то создаем последовательность событий на год вперед
-    if event.recurrence:
-        recurrence_date = event.start_time.date()
-        while recurrence_date <= datetime.now().date() + timedelta(days=365):
-            RecurringEvent(event=event, recurrence_date=recurrence_date).save()
-            recurrence_date += timedelta(days=event.recurrence)
+    # Если указана периодичность, то создаем последовательность событий
+    if 'period' in data and data['period'] is not None:
+        Recurrence.objects.create(
+            event=event,
+            interval=data['period'],
+            until=None
+        )
 
     return Response({'id': event.id}, status=status.HTTP_201_CREATED)
 
